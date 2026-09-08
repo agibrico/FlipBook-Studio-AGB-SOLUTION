@@ -1,0 +1,154 @@
+{
+  "entities": {
+    "Organization": {
+      "title": "Organization",
+      "description": "Multi-tenant organization account",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "planId": { "type": "string", "enum": ["STARTER", "PRO", "BUSINESS", "ENTERPRISE"] },
+        "maxStorageBytes": { "type": "number" },
+        "maxVideos": { "type": "number" },
+        "maxFlipbooks": { "type": "number" },
+        "usedStorageBytes": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "name", "slug", "planId", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile associated with Firebase Auth UID",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "systemRole": { "type": "string", "enum": ["SUPER_ADMIN", "STANDARD_USER"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "email", "systemRole"]
+    },
+    "Membership": {
+      "title": "Membership",
+      "description": "User membership in an organization with role",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "userId": { "type": "string" },
+        "role": { "type": "string", "enum": ["ADMIN", "OPERATOR", "CLIENT"] },
+        "clientId": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "organizationId", "userId", "role"]
+    },
+    "ClientEntity": {
+      "title": "ClientEntity",
+      "description": "Client account created by an admin",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "companyName": { "type": "string" },
+        "activeFlipbookIds": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "organizationId", "name", "email"]
+    },
+    "SourceDocument": {
+      "title": "SourceDocument",
+      "description": "Original uploaded source document",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "clientId": { "type": "string" },
+        "originalFileName": { "type": "string" },
+        "mimeType": { "type": "string" },
+        "fileSizeBytes": { "type": "number" },
+        "storagePath": { "type": "string" },
+        "status": { "type": "string" },
+        "conversionProgress": { "type": "number" },
+        "uploadedBy": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "organizationId", "originalFileName", "status", "uploadedBy"]
+    },
+    "Flipbook": {
+      "title": "Flipbook",
+      "description": "Interactive published or draft flipbook",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "clientId": { "type": "string" },
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "status": { "type": "string", "enum": ["DRAFT", "READY", "ARCHIVED"] },
+        "visibility": { "type": "string", "enum": ["PUBLIC", "PRIVATE", "PASSWORD_PROTECTED", "LINK_ONLY"] },
+        "totalPages": { "type": "number" },
+        "publicToken": { "type": "string" },
+        "viewCount": { "type": "number" },
+        "permissions": { "type": "object" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "organizationId", "title", "slug", "status", "publicToken", "totalPages"]
+    },
+    "VideoAsset": {
+      "title": "VideoAsset",
+      "description": "Video registered via VideoProvider",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "flipbookId": { "type": "string" },
+        "pageNumber": { "type": "number" },
+        "title": { "type": "string" },
+        "provider": { "type": "string" },
+        "providerVideoId": { "type": "string" },
+        "status": { "type": "string" },
+        "publicToken": { "type": "string" },
+        "publicUrl": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "organizationId", "flipbookId", "provider", "publicToken", "publicUrl"]
+    },
+    "Hotspot": {
+      "title": "Hotspot",
+      "description": "Interactive clickable region in relative coordinates",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "flipbookId": { "type": "string" },
+        "pageNumber": { "type": "number" },
+        "type": { "type": "string" },
+        "region": { "type": "object" },
+        "label": { "type": "string" }
+      },
+      "required": ["id", "flipbookId", "pageNumber", "type", "region", "label"]
+    },
+    "ShareLink": {
+      "title": "ShareLink",
+      "description": "Sharable link with custom rules and token",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "token": { "type": "string" },
+        "flipbookId": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "clientId": { "type": "string" },
+        "active": { "type": "boolean" },
+        "accessCount": { "type": "number" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "token", "flipbookId", "organizationId", "active"]
+    }
+  }
+}

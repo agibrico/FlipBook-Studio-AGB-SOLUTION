@@ -1,0 +1,6 @@
+{
+  "name": "FlipBook Studio",
+  "description": "Convertisseur et liseur interactif de documents PDF, Word et fichiers en flipbook 3D fluide et tactile pour mobile, tablette et desktop.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

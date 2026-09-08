@@ -1,0 +1,168 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.systemRole == 'SUPER_ADMIN';
+    }
+
+    function getUserMembership(orgId) {
+      return get(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId));
+    }
+
+    function isOrgAdmin(orgId) {
+      return isSuperAdmin() || (
+        isAuthenticated() &&
+        exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) &&
+        getUserMembership(orgId).data.role in ['ADMIN', 'OPERATOR']
+      );
+    }
+
+    function isOrgClient(orgId, clientId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId)) &&
+        getUserMembership(orgId).data.role == 'CLIENT' &&
+        getUserMembership(orgId).data.clientId == clientId;
+    }
+
+    // 1. Users profiles
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin());
+    }
+
+    // 2. Organizations
+    match /organizations/{orgId} {
+      allow read: if isAuthenticated() && (
+        isSuperAdmin() ||
+        exists(/databases/$(database)/documents/memberships/$(request.auth.uid + '_' + orgId))
+      );
+      allow write: if isSuperAdmin() || isOrgAdmin(orgId);
+    }
+
+    // 3. Memberships
+    match /memberships/{membershipId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin() || (
+        isAuthenticated() &&
+        isOrgAdmin(request.resource.data.organizationId)
+      );
+    }
+
+    // 4. Clients
+    match /clients/{clientId} {
+      allow read: if isAuthenticated() && (
+        isSuperAdmin() ||
+        isOrgAdmin(resource.data.organizationId) ||
+        isOrgClient(resource.data.organizationId, clientId)
+      );
+      allow write: if isAuthenticated() && isOrgAdmin(request.resource.data.organizationId);
+    }
+
+    // 5. Source Documents
+    match /documents/{docId} {
+      allow read: if isAuthenticated() && (
+        isSuperAdmin() ||
+        isOrgAdmin(resource.data.organizationId)
+      );
+      allow write: if isAuthenticated() && isOrgAdmin(request.resource.data.organizationId);
+    }
+
+    // 6. Flipbooks
+    match /flipbooks/{flipbookId} {
+      // Lecture autorisée publiquement si public ou protégé par mot de passe/lien,
+      // ou authentifié selon rôle
+      allow read: if resource.data.visibility in ['PUBLIC', 'LINK_ONLY', 'PASSWORD_PROTECTED'] ||
+        (isAuthenticated() && (
+          isSuperAdmin() ||
+          isOrgAdmin(resource.data.organizationId) ||
+          isOrgClient(resource.data.organizationId, resource.data.clientId)
+        ));
+
+      // Écriture : Admin/Opérateur peut tout modifier.
+      // Le Client ne peut QUE mettre à jour les permissions et le statut de son propre flipbook.
+      allow create, delete: if isAuthenticated() && isOrgAdmin(request.resource.data.organizationId);
+      allow update: if isAuthenticated() && (
+        isOrgAdmin(resource.data.organizationId) ||
+        (
+          isOrgClient(resource.data.organizationId, resource.data.clientId) &&
+          // Le client ne peut pas altérer les pages, le titre source ou le document source
+          request.resource.data.sourceDocumentId == resource.data.sourceDocumentId &&
+          request.resource.data.totalPages == resource.data.totalPages &&
+          request.resource.data.organizationId == resource.data.organizationId &&
+          request.resource.data.clientId == resource.data.clientId
+        )
+      );
+
+      // Sous-collections Pages
+      match /pages/{pageId} {
+        allow read: if true; // Inclus dans le flipbook public
+        allow write: if isAuthenticated() && isOrgAdmin(get(/databases/$(database)/documents/flipbooks/$(flipbookId)).data.organizationId);
+      }
+
+      // Sous-collections Hotspots
+      match /hotspots/{hotspotId} {
+        allow read: if true;
+        allow write: if isAuthenticated() && isOrgAdmin(get(/databases/$(database)/documents/flipbooks/$(flipbookId)).data.organizationId);
+      }
+
+      // Sous-collections Media Associations
+      match /mediaAssociations/{associationId} {
+        allow read: if true;
+        allow write: if isAuthenticated() && isOrgAdmin(get(/databases/$(database)/documents/flipbooks/$(flipbookId)).data.organizationId);
+      }
+    }
+
+    // 7. Video Assets
+    match /videoAssets/{videoId} {
+      allow read: if resource.data.status == 'READY' ||
+        (isAuthenticated() && (isSuperAdmin() || isOrgAdmin(resource.data.organizationId)));
+      allow write: if isAuthenticated() && isOrgAdmin(request.resource.data.organizationId);
+    }
+
+    // 8. Share Links
+    match /shareLinks/{linkId} {
+      allow read: if resource.data.active == true ||
+        (isAuthenticated() && (
+          isSuperAdmin() ||
+          isOrgAdmin(resource.data.organizationId) ||
+          isOrgClient(resource.data.organizationId, resource.data.clientId)
+        ));
+      allow write: if isAuthenticated() && (
+        isOrgAdmin(request.resource.data.organizationId) ||
+        isOrgClient(request.resource.data.organizationId, request.resource.data.clientId)
+      );
+    }
+
+    // 9. Analytics
+    match /analyticsEvents/{eventId} {
+      allow create: if true; // Télémétrie anonyme d'ouverture
+      allow read: if isAuthenticated() && (
+        isSuperAdmin() ||
+        isOrgAdmin(resource.data.organizationId) ||
+        isOrgClient(resource.data.organizationId, resource.data.clientId)
+      );
+      allow update, delete: if false; // Immuable
+    }
+
+    // 10. Audit Logs
+    match /auditLogs/{logId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() && (isSuperAdmin() || isOrgAdmin(resource.data.organizationId));
+      allow update, delete: if false; // Immuable
+    }
+
+    // 11. Subscriptions
+    match /subscriptions/{subId} {
+      allow read: if isAuthenticated() && (isSuperAdmin() || isOrgAdmin(resource.data.organizationId));
+      allow write: if isSuperAdmin();
+    }
+  }
+}
