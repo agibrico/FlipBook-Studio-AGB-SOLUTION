@@ -70,7 +70,7 @@ export const LeadCaptureModal: React.FC<LeadCaptureModalProps> = ({
       phone: phone.trim() || undefined,
       company: company.trim() || undefined,
       message: message.trim() || undefined,
-      formType,
+      formType: (formType || 'GATE_LOCK') as LeadFormType,
     });
 
     setSubmitted(true);

@@ -452,6 +452,35 @@ export interface OfflineExportOptions {
 export type AnnotationType = 'HIGHLIGHT' | 'STICKY_NOTE' | 'DRAWING';
 export type ReviewWorkflowStatus = 'DRAFT' | 'IN_REVIEW' | 'CHANGES_REQUESTED' | 'APPROVED' | 'PUBLISHED';
 
+export type CommentCategory = 'GENERAL' | 'TYPO' | 'DESIGN' | 'PRICE' | 'QUESTION' | 'APPROVAL';
+
+export interface CommentReply {
+  id: string;
+  authorName: string;
+  authorRole: UserRole | string;
+  content: string;
+  createdAt: number;
+}
+
+export interface PageComment {
+  id: string;
+  flipbookId: string;
+  pageNumber: number;
+  authorName: string;
+  authorRole: UserRole | string;
+  content: string;
+  category: CommentCategory;
+  coordinates?: {
+    x: number; // percentage 0-100 on page
+    y: number; // percentage 0-100 on page
+  };
+  resolved: boolean;
+  replies: CommentReply[];
+  color?: string; // Pin color
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface VisualAnnotation {
   id: string;
   flipbookId: string;
@@ -516,5 +545,588 @@ export interface ApiKeyRecord {
   active: boolean;
   createdAt: number;
   lastUsedAt?: number;
+}
+
+// =========================================================
+// 14. PHASE 16: E-COMMERCE & CATALOGUE SHOPPABLE INTERACTIF
+// =========================================================
+
+export interface ShoppableProduct {
+  id: string;
+  flipbookId: string;
+  pageNumber: number;
+  title: string;
+  sku: string;
+  price: number;
+  currency: string;
+  description?: string;
+  imageUrl?: string;
+  inStock: boolean;
+  variants?: { name: string; options: string[] }[];
+  category?: string;
+}
+
+export interface CartItem {
+  product: ShoppableProduct;
+  quantity: number;
+  selectedVariant?: string;
+}
+
+export interface OrderRecord {
+  id: string;
+  flipbookId: string;
+  organizationId: string;
+  clientId: string;
+  items: CartItem[];
+  totalAmount: number;
+  currency: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+  shippingAddress?: string;
+  notes?: string;
+  checkoutMode: 'WHATSAPP' | 'DIRECT' | 'STRIPE';
+  status: 'PENDING' | 'CONFIRMED' | 'SHIPPED' | 'CANCELLED';
+  createdAt: number;
+}
+
+// =========================================================
+// 15. PHASE 17: MULTI-LANGUE, I18N & LECTURE RTL (ARABE / HÉBREU)
+// =========================================================
+
+export type SupportedLanguage = 'fr' | 'en' | 'es' | 'de' | 'it' | 'ar' | 'zh';
+export type ReadingDirection = 'ltr' | 'rtl';
+
+export interface LanguageEdition {
+  code: SupportedLanguage;
+  label: string;
+  flag: string;
+  direction: ReadingDirection;
+  flipbookId: string;
+}
+
+// =========================================================
+// 16. PHASE 18: PROTECTION PAR MOT DE PASSE & WATERMARK DYNAMIQUE
+// =========================================================
+
+export interface SecurityPolicy {
+  passwordProtected: boolean;
+  passwordHash?: string;
+  maxAttempts: number;
+  lockoutMinutes: number;
+  expiresAt?: number | null;
+  enableDynamicWatermark: boolean;
+  watermarkTextPattern: string; // Ex: "{{email}} • {{ip}} • {{date}}"
+  preventScreenshotsHint: boolean;
+}
+
+export interface WatermarkConfig {
+  text: string;
+  opacity: number; // 0.05 to 0.4
+  angle: number;   // -45 to 45 deg
+  fontSize: number;
+  color: string;
+}
+
+// =========================================================
+// 17. PHASE 19: ASSISTANT IA GEMINI & RÉSUMÉ INTELLIGENT DE PAGE
+// =========================================================
+
+export interface AiQueryMessage {
+  id: string;
+  sender: 'user' | 'assistant';
+  text: string;
+  timestamp: number;
+  referencedPages?: number[];
+}
+
+export interface PageAiSummary {
+  pageNumber: number;
+  title: string;
+  keyPoints: string[];
+  suggestedQuestions: string[];
+  readingTimeMinutes: number;
+}
+
+// =========================================================
+// 18. PHASE 20: HEATMAPS & ANALYSE D'ATTENTION LECTEUR
+// =========================================================
+
+export interface HeatmapPoint {
+  x: number; // relative 0-1
+  y: number; // relative 0-1
+  intensity: number; // 0.1 to 1.0
+  type: 'CLICK' | 'HOVER' | 'ZOOM';
+}
+
+export interface PageAttentionMetric {
+  pageNumber: number;
+  averageDwellSeconds: number;
+  totalViews: number;
+  zoomInteractions: number;
+  hotspotClicks: number;
+  dropOffRatePercent: number;
+  heatmapPoints: HeatmapPoint[];
+}
+
+// =========================================================
+// 19. PHASE 21: PERSONNALISATION DE MARQUE & THÈMES BLANCS
+// =========================================================
+
+export interface ThemeSkinConfig {
+  id: string;
+  name: string;
+  primaryColor: string;
+  accentColor: string;
+  backgroundColor: string;
+  surfaceColor: string;
+  textColor: string;
+  dockStyle: 'floating' | 'bottom-bar' | 'minimalist-top';
+  bookSpineColor: string;
+  borderRadiusPx: number;
+  customLogoUrl?: string;
+  showPoweredBy: boolean;
+}
+
+// =========================================================
+// 20. PHASE 22: AMBIANCE SONORE & AUDIO GUIDE MULTI-PISTES
+// =========================================================
+
+export interface AmbientSoundTrack {
+  id: string;
+  title: string;
+  genre: 'LOUNGE' | 'NATURE_SPA' | 'CORPORATE' | 'MINIMAL_JAZZ';
+  audioUrl: string;
+  volume: number;
+  loop: boolean;
+}
+
+export interface PageAudioTourStep {
+  pageNumber: number;
+  trackUrl: string;
+  narratorName: string;
+  durationSeconds: number;
+  autoPlayOnPageTurn: boolean;
+}
+
+// =========================================================
+// 21. PHASE 23: MODE KIOSQUE, PRÉSENTATION & SPOTLIGHT LASER
+// =========================================================
+
+export interface KioskConfig {
+  enabled: boolean;
+  idleTimeoutSeconds: number;
+  autoReturnToCover: boolean;
+  disableOutboundLinks: boolean;
+  slideshowIntervalSeconds: number;
+  isSlideshowRunning: boolean;
+}
+
+// =========================================================
+// 22. PHASE 24: COLLABORATION D'ÉQUIPE & RÔLES RBAC AVANCÉS
+// =========================================================
+
+export interface TeamMemberRecord {
+  id: string;
+  organizationId: string;
+  email: string;
+  fullName: string;
+  role: 'SUPER_ADMIN' | 'ADMIN' | 'OPERATOR' | 'REVIEWER' | 'CLIENT';
+  permissions: {
+    canEditHotspots: boolean;
+    canPublish: boolean;
+    canViewLeads: boolean;
+    canManageBilling: boolean;
+    canExportOfflineZip: boolean;
+  };
+  lastActiveAt?: number;
+  createdAt: number;
+}
+
+// =========================================================
+// 23. PHASE 25: BIBLIOTHÈQUE DE MODÈLES & PRESETS MÉTIERS
+// =========================================================
+
+export interface FlipbookTemplatePreset {
+  id: string;
+  name: string;
+  category: 'HOSPITALITY' | 'REAL_ESTATE' | 'GASTRONOMY' | 'FASHION' | 'CORPORATE' | 'RETAIL';
+  description: string;
+  themeConfig: Partial<ThemeSkinConfig>;
+  sampleHotspotsCount: number;
+  recommendedAspect: 'A4' | '16:9' | 'SQUARE';
+  previewImageUrl: string;
+}
+
+// =========================================================
+// 24. PHASE 26: PARTAGE SOCIAL & GÉNÉRATEUR OPEN GRAPH DYNAMIQUE
+// =========================================================
+
+export interface SocialCardConfig {
+  title: string;
+  description: string;
+  imageUrl: string;
+  targetPage: number;
+  targetHotspotId?: string;
+  platforms: {
+    whatsappText: string;
+    twitterHandle?: string;
+    linkedinSummary?: string;
+  };
+}
+
+// =========================================================
+// 25. PHASE 27: GESTION EN LOT (BATCH) ET ACTIONS MULTIPLES
+// =========================================================
+
+export type BatchOperationType = 'ASSIGN_CLIENT' | 'CHANGE_VISIBILITY' | 'EXPORT_ZIP' | 'ARCHIVE' | 'DELETE';
+
+export interface BatchJobState {
+  operation: BatchOperationType;
+  selectedIds: string[];
+  progressPercent: number;
+  status: 'IDLE' | 'PROCESSING' | 'COMPLETED' | 'ERROR';
+}
+
+// =========================================================
+// 26. PHASE 28: FORMULAIRES, SONDAGES & NPS DIRECTEMENT SUR PAGE
+// =========================================================
+
+export interface SurveyQuestion {
+  id: string;
+  type: 'RATING_5' | 'NPS_10' | 'CHOICE' | 'TEXT';
+  prompt: string;
+  options?: string[];
+}
+
+export interface PageSurveyRecord {
+  id: string;
+  flipbookId: string;
+  pageNumber: number;
+  title: string;
+  questions: SurveyQuestion[];
+  totalSubmissions: number;
+  averageRating?: number;
+}
+
+export interface SurveySubmission {
+  id: string;
+  surveyId: string;
+  flipbookId: string;
+  answers: Record<string, string | number>;
+  submittedAt: number;
+}
+
+// =========================================================
+// 27. PHASE 29: ACCESSIBILITÉ (A11Y) & CONFORMITÉ WCAG 2.1 AAA
+// =========================================================
+
+export interface AccessibilitySettings {
+  highContrast: boolean;
+  dyslexicFont: boolean;
+  textScalePercent: number; // 100 to 180
+  reducedMotion: boolean;
+  screenReaderAnnouncements: boolean;
+}
+
+// =========================================================
+// 28. PHASE 30: EXPLORATEUR D'API REST & MOTEUR WEBHOOKS AVANCÉ
+// =========================================================
+
+export interface ApiEndpointDoc {
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  path: string;
+  summary: string;
+  description: string;
+  requiresAuth: boolean;
+  sampleRequest?: Record<string, unknown>;
+  sampleResponse: Record<string, unknown>;
+}
+
+export interface WebhookDeliveryLog {
+  id: string;
+  webhookId: string;
+  event: string;
+  payload: Record<string, unknown>;
+  responseCode: number;
+  durationMs: number;
+  success: boolean;
+  timestamp: number;
+}
+
+// =========================================================
+// 29. PHASE 31: MOTEUR D'EXPORT PDF SÉLECTIF & RECADRAGE HD
+// =========================================================
+
+export interface SelectivePrintOptions {
+  mode: 'ALL' | 'CURRENT' | 'CUSTOM_RANGE' | 'CROPPED_SELECTION';
+  customPages: number[]; // e.g. [1, 2, 4, 7]
+  qualityDpi: 150 | 300 | 600;
+  format: 'A4' | 'LETTER' | 'BOOKLET_2UP';
+  includeAnnotations: boolean;
+  includeWatermark: boolean;
+  cropArea?: RelativeRegion;
+}
+
+// =========================================================
+// 30. PHASE 32: FORM BUILDER INTÉGRÉ SUR PAGE (LEAD SHEETS & DEVIS)
+// =========================================================
+
+export type FormFieldType =
+  | 'TEXT'
+  | 'EMAIL'
+  | 'PHONE'
+  | 'NUMBER'
+  | 'TEXTAREA'
+  | 'SELECT'
+  | 'RADIO'
+  | 'CHECKBOX'
+  | 'DATE'
+  | 'RANGE_SLIDER'
+  | 'CALCULATOR';
+
+export interface FormFieldConfig {
+  id: string;
+  label: string;
+  type: FormFieldType;
+  placeholder?: string;
+  required: boolean;
+  options?: string[];
+  defaultValue?: string | number;
+  unit?: string; // e.g. "€", "m²", "jours"
+}
+
+export interface InPageFormConfig {
+  id: string;
+  flipbookId: string;
+  pageNumber: number;
+  title: string;
+  subtitle?: string;
+  submitButtonText: string;
+  successMessage: string;
+  fields: FormFieldConfig[];
+  targetEmailNotification?: string;
+  targetWebhookUrl?: string;
+  enablePriceCalculation?: boolean;
+  priceFormula?: string;
+}
+
+export interface InPageFormSubmission {
+  id: string;
+  formId: string;
+  flipbookId: string;
+  pageNumber: number;
+  values: Record<string, string | number | boolean>;
+  submittedAt: number;
+  calculatedQuoteTotal?: number;
+}
+
+// =========================================================
+// 31. PHASE 33: MOTEUR A/B TESTING & SPLIT TRAFFIC
+// =========================================================
+
+export interface AbTestVariant {
+  id: string;
+  name: string;
+  description: string;
+  coverImageUrl?: string;
+  ctaText?: string;
+  ctaColor?: string;
+  startPage?: number;
+  weightPercent: number; // e.g. 50
+  viewsCount: number;
+  conversionsCount: number;
+  ordersTotalAmount: number;
+}
+
+export interface AbTestExperiment {
+  id: string;
+  organizationId: string;
+  flipbookId: string;
+  title: string;
+  status: 'DRAFT' | 'RUNNING' | 'PAUSED' | 'CONCLUDED';
+  goalMetric: 'LEADS' | 'ORDERS' | 'READING_TIME' | 'HOTSPOT_CLICKS';
+  startDate: number;
+  endDate?: number;
+  winnerVariantId?: string;
+  variants: AbTestVariant[];
+  confidenceLevel: number; // e.g. 95%
+}
+
+// =========================================================
+// 32. PHASE 34: MODÈLES 3D INTERACTIFS & HOTSPOTS WEB-AR
+// =========================================================
+
+export interface Model3DHotspot {
+  id: string;
+  flipbookId: string;
+  pageNumber: number;
+  title: string;
+  category: 'FURNITURE' | 'JEWELRY' | 'WATCH' | 'AUTOMOTIVE' | 'ARCHI' | 'PRODUCT';
+  modelType: 'GLTF' | 'USDZ' | 'PROCEDURAL_PRESET';
+  modelUrl: string;
+  presetKey?: 'LUXURY_WATCH' | 'DESIGNER_CHAIR' | 'PERFUME_BOTTLE' | 'VILLA_PAVILION';
+  autoRotate: boolean;
+  roughness: number;
+  metalness: number;
+  baseColor: string;
+  arEnabled: boolean;
+  dimensionsText: string;
+  price?: number;
+}
+
+// =========================================================
+// 33. PHASE 35: GOUVERNANCE DRM, COMPTE À REBOURS & GEO-FENCING
+// =========================================================
+
+export interface DrmGovernancePolicy {
+  flipbookId: string;
+  isDrmEnabled: boolean;
+  expiresAt: number | null; // Ephemeral shredding timestamp
+  autoRevokeAfterMinutesFromFirstOpen?: number;
+  allowedCountryCodes: string[]; // e.g. ['FR', 'BE', 'CH', 'CA']
+  blockedCountryCodes: string[];
+  preventScreenshots: boolean;
+  blurOnWindowBlur: boolean;
+  blockPrinting: boolean;
+  disableDevToolsInspect: boolean;
+  screenDynamicFingerprint: boolean; // Overlays user IP + Timestamp in micro-pattern
+  accessKeyMaxUses?: number;
+  totalAccessesSoFar: number;
+}
+
+// =========================================================
+// 34. PHASE 36: CO-BROWSING EN DIRECT & VISITE GUIDÉE COMMERCIALE
+// =========================================================
+
+export interface CoBrowsingSession {
+  id: string;
+  sessionCode: string; // 6-digit PIN e.g. "849201"
+  flipbookId: string;
+  hostName: string;
+  hostRole: 'SALES_REP' | 'GUIDE';
+  activePage: number;
+  laserCoordinates: { x: number; y: number };
+  zoomLevel: number;
+  guestCount: number;
+  isLive: boolean;
+  audioVoiceStatus: 'MUTED' | 'SPEAKING' | 'LISTENING';
+  notes: string;
+  startedAt: number;
+}
+
+// =========================================================
+// 35. PHASE 37: AVATAR VIDÉO TRANSPARENT & CHROMA-KEY (FOND VERT)
+// =========================================================
+
+export interface ChromaKeyAvatarConfig {
+  id: string;
+  flipbookId: string;
+  enabled: boolean;
+  videoUrl: string;
+  avatarName: string;
+  position: 'BOTTOM_RIGHT' | 'BOTTOM_LEFT' | 'CENTER_FLOATING' | 'CORNER_BADGE';
+  chromaKeyColor: string; // Default "#00FF00" for green screen removal
+  similarityThreshold: number; // 0.05 to 0.4
+  autoPlayOnPageArrival: boolean;
+  speechBubbleText?: string;
+  ctaText?: string;
+  ctaUrl?: string;
+}
+
+// =========================================================
+// 36. PHASE 38: SYNCHRONISATION CATALOGUE PRODUITS CSV / ERP
+// =========================================================
+
+export interface SyncedProductItem {
+  sku: string;
+  title: string;
+  category: string;
+  currentPrice: number;
+  previousPrice?: number;
+  stockQuantity: number;
+  inStock: boolean;
+  mappedPageNumber: number;
+  lastSyncedAt: number;
+}
+
+export interface CatalogSyncStatus {
+  totalProducts: number;
+  inStockCount: number;
+  outOfStockCount: number;
+  lastSyncTimestamp: number;
+  sourceType: 'CSV_UPLOAD' | 'SHOPIFY_API' | 'ERP_WEBHOOK' | 'GOOGLE_SHEETS';
+}
+
+// =========================================================
+// 37. PHASE 39: CAMPAGNES D'EMAILS AUTOMATISÉES & SMART RETARGETING
+// =========================================================
+
+export type CampaignTriggerType =
+  | 'ABANDONED_READER' // Viewed cover but dropped before page 3
+  | 'HIGH_ENGAGEMENT'  // Spent > 3 min or zoomed on pricing
+  | 'CART_ABANDONED'   // Added to cart but no checkout
+  | 'SURVEY_COMPLETED';
+
+export interface EmailCampaignSequence {
+  id: string;
+  organizationId: string;
+  flipbookId: string;
+  name: string;
+  trigger: CampaignTriggerType;
+  delayHours: number;
+  subject: string;
+  emailBodyHtml: string;
+  active: boolean;
+  stats: {
+    sentCount: number;
+    openRatePercent: number;
+    clickRatePercent: number;
+    conversionsCount: number;
+  };
+}
+
+// =========================================================
+// 38. PHASE 40: MOTEUR DE PHYSIQUE DU PAPIER & TRANSITIONS 3D
+// =========================================================
+
+export type PageFlipEngineMode =
+  | 'CLASSIC_3D_PAGE_CURL'    // Papier glacé avec reflets de courbure
+  | 'HARDCOVER_BOUND_BOOK'    // Reliure livre rigide épaisse
+  | 'SPIRAL_WIRE_NOTEBOOK'    // Carnet à spirale métallique
+  | 'CONTINUOUS_INFINITE_SCROLL' // Défilement fluide sans cassure
+  | 'ACCORDION_PANORAMIC';    // Dépliant panoramique 3 volets
+
+export interface FlipPhysicsSettings {
+  engineMode: PageFlipEngineMode;
+  paperStiffness: number; // 0.1 (très souple) à 1.0 (cartonné)
+  shadowIntensity: number; // 0.1 à 1.0
+  cornerCurlRadius: number; // Courbure interactive au survol
+  soundEffect: 'NONE' | 'SOFT_PAPER' | 'CRISP_MAGAZINE' | 'HEAVY_HARDBACK';
+}
+
+// =========================================================
+// 39. PHASE 41: CONFORMITÉ RGPD / GDPR & CENTRE DE CONFIDENTIALITÉ
+// =========================================================
+
+export interface GdprConsentSettings {
+  cookieBannerEnabled: boolean;
+  allowEssential: boolean; // Always true
+  allowAnalyticsTelemetry: boolean;
+  allowMarketingRetargeting: boolean;
+  allowHeatmapTracking: boolean;
+  retentionPeriodDays: 30 | 90 | 180 | 365;
+  anonymizeIpAddresses: boolean;
+  privacyPolicyUrl: string;
+  dpoContactEmail: string;
+}
+
+export interface GdprDataSubjectRequest {
+  id: string;
+  email: string;
+  requestType: 'EXPORT_DATA' | 'DELETE_PURGE' | 'RECTIFY';
+  status: 'PENDING' | 'PROCESSED' | 'REJECTED';
+  requestedAt: number;
+  completedAt?: number;
 }
 

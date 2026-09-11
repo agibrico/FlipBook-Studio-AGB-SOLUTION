@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FlipBookDocument } from '../types';
-import { X } from 'lucide-react';
+import { commentService } from '../services/commentService';
+import { PageComment } from '../types/saas';
+import { X, MessageSquare } from 'lucide-react';
 
 interface ThumbnailsDrawerProps {
   document: FlipBookDocument;
@@ -17,6 +19,28 @@ export const ThumbnailsDrawer: React.FC<ThumbnailsDrawerProps> = ({
   onClose,
   onSelectPage,
 }) => {
+  const [comments, setComments] = useState<PageComment[]>(() => commentService.getComments(doc.id));
+
+  useEffect(() => {
+    const update = () => {
+      setComments(commentService.getComments(doc.id));
+    };
+    update();
+    const unsub = commentService.subscribe(update);
+    return () => unsub();
+  }, [doc.id]);
+
+  const commentsByPage = useMemo(() => {
+    const map = new Map<number, { count: number; unresolved: number }>();
+    comments.forEach((c) => {
+      const prev = map.get(c.pageNumber) || { count: 0, unresolved: 0 };
+      prev.count += 1;
+      if (!c.resolved) prev.unresolved += 1;
+      map.set(c.pageNumber, prev);
+    });
+    return map;
+  }, [comments]);
+
   if (!isOpen) return null;
 
   return (
@@ -82,6 +106,24 @@ export const ThumbnailsDrawer: React.FC<ThumbnailsDrawerProps> = ({
                   {isSelected && (
                     <div className="absolute inset-0 border-2 border-indigo-500 pointer-events-none" />
                   )}
+
+                  {/* Comment bubble indicator */}
+                  {(() => {
+                    const info = commentsByPage.get(p.pageNumber);
+                    if (!info || info.count === 0) return null;
+                    return (
+                      <div
+                        className="absolute top-1 right-1 z-10 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-zinc-900/90 text-white border border-indigo-400/50 shadow-md backdrop-blur-xs"
+                        title={`${info.count} note(s) sur cette page`}
+                      >
+                        <MessageSquare className="w-2.5 h-2.5 text-indigo-400" />
+                        <span className="text-[9px] font-mono font-bold leading-none">{info.count}</span>
+                        {info.unresolved > 0 && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse ml-0.5" />
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <span

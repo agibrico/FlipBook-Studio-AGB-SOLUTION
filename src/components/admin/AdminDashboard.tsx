@@ -9,6 +9,19 @@ import { EmbedGeneratorModal } from './EmbedGeneratorModal';
 import { QrCodeModal } from './QrCodeModal';
 import { offlineExportService } from '../../services/offlineExportService';
 import { SAMPLE_BOOKS } from '../../services/sampleBooks';
+import { EcommerceOrdersTab } from './EcommerceOrdersTab';
+import { HeatmapAnalyticsTab } from './HeatmapAnalyticsTab';
+import { BrandingCustomizerTab } from './BrandingCustomizerTab';
+import { TeamRbacTab } from './TeamRbacTab';
+import { TemplateLibraryTab } from './TemplateLibraryTab';
+import { DeveloperApiTab } from './DeveloperApiTab';
+import { BatchOperationsModal } from './BatchOperationsModal';
+import { AbTestingTab } from './AbTestingTab';
+import { DrmGovernanceTab } from './DrmGovernanceTab';
+import { ProductSyncTab } from './ProductSyncTab';
+import { EmailCampaignsTab } from './EmailCampaignsTab';
+import { GdprComplianceTab } from './GdprComplianceTab';
+import { CoBrowsingHostModal } from './CoBrowsingHostModal';
 import {
   Users,
   BookOpen,
@@ -40,6 +53,15 @@ import {
   Download,
   UserCheck,
   Webhook,
+  ShoppingBag,
+  Flame,
+  Palette,
+  Shield,
+  Layers,
+  Code2,
+  Split,
+  RefreshCw,
+  Radio,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -55,7 +77,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   const { activeOrg, role, clients, switchRole, createClient, refreshTenantData } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'clients' | 'flipbooks' | 'quotas' | 'analytics'>('clients');
+  const [activeTab, setActiveTab] = useState<
+    | 'clients'
+    | 'flipbooks'
+    | 'quotas'
+    | 'analytics'
+    | 'orders'
+    | 'heatmaps'
+    | 'branding'
+    | 'team'
+    | 'templates'
+    | 'api'
+    | 'abtesting'
+    | 'drm'
+    | 'productsync'
+    | 'emails'
+    | 'gdpr'
+  >('clients');
+  const [isCoBrowsingModalOpen, setIsCoBrowsingModalOpen] = useState(false);
+  const [selectedFlipbookIds, setSelectedFlipbookIds] = useState<string[]>([]);
+  const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
   const [analyticsFlipbookId, setAnalyticsFlipbookId] = useState<string | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
@@ -203,63 +244,194 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
 
         {/* Tab Navigation & Search */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-3">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab('clients')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'clients'
-                  ? 'bg-zinc-800 text-white border border-zinc-700 shadow-sm'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              Gestion des Clients ({clients.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('flipbooks')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'flipbooks'
-                  ? 'bg-zinc-800 text-white border border-zinc-700 shadow-sm'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              Flipbooks & Attribution ({orgFlipbooks.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('quotas')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'quotas'
-                  ? 'bg-zinc-800 text-white border border-zinc-700 shadow-sm'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              Quotas & Organisation
-            </button>
-            <button
-              onClick={() => {
-                setAnalyticsFlipbookId(undefined);
-                setActiveTab('analytics');
-              }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
-                activeTab === 'analytics'
-                  ? 'bg-zinc-800 text-white border border-zinc-700 shadow-sm'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Statistiques &amp; Rétention</span>
-            </button>
-          </div>
+        <div className="flex flex-col gap-3 border-b border-zinc-800 pb-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+              <button
+                onClick={() => setActiveTab('clients')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                  activeTab === 'clients'
+                    ? 'bg-zinc-800 text-white border border-zinc-700 shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Clients ({clients.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('flipbooks')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                  activeTab === 'flipbooks'
+                    ? 'bg-zinc-800 text-white border border-zinc-700 shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Flipbooks ({orgFlipbooks.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                  activeTab === 'orders'
+                    ? 'bg-amber-600 text-white shadow-sm'
+                    : 'text-amber-300 hover:text-white hover:bg-zinc-800/60'
+                }`}
+              >
+                <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
+                <span>Commandes</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('heatmaps')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                  activeTab === 'heatmaps'
+                    ? 'bg-rose-600 text-white shadow-sm'
+                    : 'text-rose-300 hover:text-white hover:bg-zinc-800/60'
+                }`}
+              >
+                <Flame className="w-3.5 h-3.5 text-rose-400" />
+                <span>Heatmaps</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('branding')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                  activeTab === 'branding'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                }`}
+              >
+                <Palette className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Marque Blanche</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('team')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                  activeTab === 'team'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                }`}
+              >
+                <Shield className="w-3.5 h-3.5 text-purple-400" />
+                <span>Équipe & Rôles</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('templates')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                  activeTab === 'templates'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Modèles</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('api')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                  activeTab === 'api'
+                    ? 'bg-cyan-600 text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                }`}
+              >
+                <Code2 className="w-3.5 h-3.5 text-cyan-400" />
+                <span>API REST</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('abtesting')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                  activeTab === 'abtesting'
+                    ? 'bg-violet-600 text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                }`}
+              >
+                <Split className="w-3.5 h-3.5 text-violet-400" />
+                <span>Tests A/B</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('drm')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                  activeTab === 'drm'
+                    ? 'bg-rose-600 text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                }`}
+              >
+                <Lock className="w-3.5 h-3.5 text-rose-400" />
+                <span>DRM & Geo</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('productsync')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                  activeTab === 'productsync'
+                    ? 'bg-amber-600 text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                }`}
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
+                <span>Sync Produits</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('emails')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                  activeTab === 'emails'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                }`}
+              >
+                <Mail className="w-3.5 h-3.5 text-blue-400" />
+                <span>E-mails Auto</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('gdpr')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                  activeTab === 'gdpr'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                }`}
+              >
+                <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                <span>RGPD / Privacy</span>
+              </button>
+              <button
+                onClick={() => setIsCoBrowsingModalOpen(true)}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20"
+                title="Démarrer une présentation synchronisée en direct avec un client"
+              >
+                <Radio className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+                <span>Co-Browsing Live</span>
+              </button>
+              <button
+                onClick={() => {
+                  setAnalyticsFlipbookId(undefined);
+                  setActiveTab('analytics');
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                  activeTab === 'analytics'
+                    ? 'bg-zinc-800 text-white border border-zinc-700 shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Stats</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('quotas')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                  activeTab === 'quotas'
+                    ? 'bg-zinc-800 text-white border border-zinc-700 shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Organisation
+              </button>
+            </div>
 
-          <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-2.5" />
-            <input
-              type="text"
-              placeholder="Rechercher..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3 py-1.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-colors"
-            />
+            <div className="relative w-full sm:w-64">
+              <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-2" />
+              <input
+                type="text"
+                placeholder="Rechercher..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              />
+            </div>
           </div>
         </div>
 
@@ -357,30 +529,88 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {/* TAB 2: FLIPBOOKS & ATTRIBUTION */}
         {activeTab === 'flipbooks' && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-lg">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-zinc-300">
-                <thead className="bg-zinc-950 text-xs uppercase text-zinc-400 border-b border-zinc-800">
-                  <tr>
-                    <th className="px-4 py-3">Document / Flipbook</th>
-                    <th className="px-4 py-3">Statut & Pages</th>
-                    <th className="px-4 py-3">Attribution Client</th>
-                    <th className="px-4 py-3">Visibilité</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800/60">
-                  {filteredFlipbooks.map((fb) => {
-                    const assignedClient = clients.find((c) => c.id === fb.clientId);
+          <div className="space-y-3">
+            {/* Batch Bar */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={
+                    filteredFlipbooks.length > 0 &&
+                    selectedFlipbookIds.length === filteredFlipbooks.length
+                  }
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedFlipbookIds(filteredFlipbooks.map((f) => f.id));
+                    } else {
+                      setSelectedFlipbookIds([]);
+                    }
+                  }}
+                  className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
+                />
+                <span className="text-xs text-zinc-400">
+                  {selectedFlipbookIds.length} sélectionné(s)
+                </span>
+              </div>
 
-                    return (
-                      <tr key={fb.id} className="hover:bg-zinc-800/40 transition-colors">
-                        <td className="px-4 py-3.5">
-                          <div className="font-semibold text-white">{fb.title}</div>
-                          <div className="text-xs text-zinc-500 font-mono mt-0.5">
-                            /f/{fb.slug} • {fb.viewCount} vues
-                          </div>
-                        </td>
+              {selectedFlipbookIds.length > 0 && (
+                <button
+                  onClick={() => setIsBatchModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/20 flex items-center gap-1.5 animate-fadeIn"
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  Actions groupées ({selectedFlipbookIds.length})
+                </button>
+              )}
+            </div>
+
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-lg">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-zinc-300">
+                  <thead className="bg-zinc-950 text-xs uppercase text-zinc-400 border-b border-zinc-800">
+                    <tr>
+                      <th className="px-4 py-3 w-10"></th>
+                      <th className="px-4 py-3">Document / Flipbook</th>
+                      <th className="px-4 py-3">Statut & Pages</th>
+                      <th className="px-4 py-3">Attribution Client</th>
+                      <th className="px-4 py-3">Visibilité</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/60">
+                    {filteredFlipbooks.map((fb) => {
+                      const assignedClient = clients.find((c) => c.id === fb.clientId);
+                      const isSelected = selectedFlipbookIds.includes(fb.id);
+
+                      return (
+                        <tr
+                          key={fb.id}
+                          className={`transition-colors ${
+                            isSelected ? 'bg-indigo-950/20' : 'hover:bg-zinc-800/40'
+                          }`}
+                        >
+                          <td className="px-4 py-3.5">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedFlipbookIds((prev) => [...prev, fb.id]);
+                                } else {
+                                  setSelectedFlipbookIds((prev) =>
+                                    prev.filter((id) => id !== fb.id)
+                                  );
+                                }
+                              }}
+                              className="w-4 h-4 accent-indigo-600 rounded cursor-pointer"
+                            />
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <div className="font-semibold text-white">{fb.title}</div>
+                            <div className="text-xs text-zinc-500 font-mono mt-0.5">
+                              /f/{fb.slug} • {fb.viewCount} vues
+                            </div>
+                          </td>
 
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2">
@@ -457,7 +687,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </table>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
         {/* TAB 3: QUOTAS & ABONNEMENT SAAS */}
         {activeTab === 'quotas' && (
@@ -793,6 +1024,93 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {/* TAB 4: AUDIENCE ANALYTICS & RETENTION */}
         {activeTab === 'analytics' && (
           <AnalyticsDashboard initialFlipbookId={analyticsFlipbookId} />
+        )}
+
+        {/* TAB 5: E-COMMERCE ORDERS (Phase 16) */}
+        {activeTab === 'orders' && (
+          <EcommerceOrdersTab organizationId={activeOrg.id} />
+        )}
+
+        {/* TAB 6: HEATMAPS ANALYTICS (Phase 20) */}
+        {activeTab === 'heatmaps' && (
+          <HeatmapAnalyticsTab
+            flipbooks={orgFlipbooks}
+            defaultFlipbookId={orgFlipbooks[0]?.id || 'fbk-hotel-palace-nice'}
+          />
+        )}
+
+        {/* TAB 7: BRANDING & PORTAL CUSTOMIZER (Phase 21) */}
+        {activeTab === 'branding' && (
+          <BrandingCustomizerTab organizationId={activeOrg.id} />
+        )}
+
+        {/* TAB 8: TEAM COLLABORATION & RBAC (Phase 24) */}
+        {activeTab === 'team' && (
+          <TeamRbacTab organizationId={activeOrg.id} />
+        )}
+
+        {/* TAB 9: TEMPLATES PRESETS LIBRARY (Phase 25) */}
+        {activeTab === 'templates' && (
+          <TemplateLibraryTab organizationId={activeOrg.id} />
+        )}
+
+        {/* TAB 10: DEVELOPER REST API & WEBHOOKS (Phase 30) */}
+        {activeTab === 'api' && (
+          <DeveloperApiTab organizationId={activeOrg.id} />
+        )}
+
+        {/* TAB 11: A/B TESTING & SPLIT TRAFFIC (Phase 33) */}
+        {activeTab === 'abtesting' && (
+          <AbTestingTab />
+        )}
+
+        {/* TAB 12: DRM GOVERNANCE & GEO-FENCING (Phase 35) */}
+        {activeTab === 'drm' && (
+          <DrmGovernanceTab />
+        )}
+
+        {/* TAB 13: CATALOG PRODUCT & STOCK SYNC (Phase 38) */}
+        {activeTab === 'productsync' && (
+          <ProductSyncTab />
+        )}
+
+        {/* TAB 14: AUTOMATED EMAIL RETARGETING (Phase 39) */}
+        {activeTab === 'emails' && (
+          <EmailCampaignsTab />
+        )}
+
+        {/* TAB 15: GDPR & PRIVACY CENTER (Phase 41) */}
+        {activeTab === 'gdpr' && (
+          <GdprComplianceTab />
+        )}
+
+        {/* CO-BROWSING HOST MODAL (Phase 36) */}
+        {isCoBrowsingModalOpen && (
+          <CoBrowsingHostModal
+            flipbookId={orgFlipbooks[0]?.id || 'fbk-hotel-palace-nice'}
+            isOpen={isCoBrowsingModalOpen}
+            onClose={() => setIsCoBrowsingModalOpen(false)}
+            onSessionStarted={() => {
+              setIsCoBrowsingModalOpen(false);
+              onOpenFlipbook(orgFlipbooks[0]?.id || 'fbk-hotel-palace-nice');
+            }}
+          />
+        )}
+
+        {/* BATCH OPERATIONS MODAL (Phase 27) */}
+        {isBatchModalOpen && (
+          <BatchOperationsModal
+            selectedFlipbooks={orgFlipbooks.filter((fb) =>
+              selectedFlipbookIds.includes(fb.id)
+            )}
+            clients={clients}
+            onClose={() => setIsBatchModalOpen(false)}
+            onSuccess={(msg) => {
+              setPlanSuccessMsg(msg);
+              setSelectedFlipbookIds([]);
+              setTimeout(() => setPlanSuccessMsg(null), 4000);
+            }}
+          />
         )}
 
         {/* MODAL: ADD CLIENT */}

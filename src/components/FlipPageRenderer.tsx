@@ -20,6 +20,9 @@ interface FlipPageRendererProps {
   side?: 'left' | 'right' | 'single';
   onHotspotClick?: (hotspot: HotspotRecord) => void;
   onNavigateToPage?: (page: number) => void;
+  commentCount?: number;
+  unresolvedCommentCount?: number;
+  onCommentClick?: () => void;
 }
 
 export const FlipPageRenderer: React.FC<FlipPageRendererProps> = ({
@@ -29,6 +32,9 @@ export const FlipPageRenderer: React.FC<FlipPageRendererProps> = ({
   side = 'single',
   onHotspotClick,
   onNavigateToPage,
+  commentCount,
+  unresolvedCommentCount,
+  onCommentClick,
 }) => {
   if (!page) {
     return (
@@ -162,6 +168,39 @@ export const FlipPageRenderer: React.FC<FlipPageRendererProps> = ({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Visual Indicator (small comment bubble) notifying existing feedback on this page */}
+      {commentCount !== undefined && commentCount > 0 && (
+        <div
+          className={`absolute z-35 pointer-events-auto ${
+            side === 'left' ? 'top-3 left-3' : 'top-3 right-3'
+          }`}
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCommentClick?.();
+            }}
+            className="group flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900/90 hover:bg-indigo-950 text-white text-xs border border-zinc-700/80 hover:border-indigo-400/90 shadow-xl backdrop-blur-md transition-all hover:scale-105 cursor-pointer"
+            title={`${commentCount} note(s) sur la page ${pageNumber}. Cliquez pour ouvrir les notes.`}
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-indigo-400 group-hover:text-indigo-300 fill-indigo-400/20" />
+            <span className="font-semibold font-mono text-[11px] text-zinc-100">{commentCount}</span>
+            {unresolvedCommentCount !== undefined && unresolvedCommentCount > 0 ? (
+              <span
+                className="w-2 h-2 rounded-full bg-amber-400 ring-2 ring-zinc-900 animate-pulse"
+                title={`${unresolvedCommentCount} note(s) non résolue(s)`}
+              />
+            ) : (
+              <span
+                className="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-zinc-900"
+                title="Toutes les notes sont résolues"
+              />
+            )}
+          </button>
         </div>
       )}
     </div>

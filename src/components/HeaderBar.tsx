@@ -14,6 +14,13 @@ import {
   Square,
   Sparkles,
   Headphones,
+  Printer,
+  Box,
+  FileText,
+  Sliders,
+  Video,
+  ChevronDown,
+  Activity,
 } from 'lucide-react';
 
 interface HeaderBarProps {
@@ -33,6 +40,14 @@ interface HeaderBarProps {
   deviceMode: DeviceMode;
   onChangeDeviceMode: (mode: DeviceMode) => void;
   bookmarkCount: number;
+  onOpenPrintSelection?: () => void;
+  onOpenFlipPhysics?: () => void;
+  onOpen3DViewer?: () => void;
+  onOpenInPageForm?: () => void;
+  onToggleChromaAvatar?: () => void;
+  isChromaAvatarActive?: boolean;
+  isDeveloperMode?: boolean;
+  onToggleDeveloperMode?: () => void;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -52,8 +67,17 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   deviceMode,
   onChangeDeviceMode,
   bookmarkCount,
+  onOpenPrintSelection,
+  onOpenFlipPhysics,
+  onOpen3DViewer,
+  onOpenInPageForm,
+  onToggleChromaAvatar,
+  isChromaAvatarActive,
+  isDeveloperMode,
+  onToggleDeveloperMode,
 }) => {
   const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const [showToolsMenu, setShowToolsMenu] = useState(false);
 
   const themeLabels: Record<ReaderTheme, { name: string; color: string }> = {
     'studio-dark': { name: 'Studio Sombre', color: 'bg-zinc-900' },
@@ -233,6 +257,132 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
                   <span className={`w-3 h-3 rounded-full border border-white/20 ${themeLabels[t].color}`} />
                 </button>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Advanced Tools Dropdown (Phases 31, 32, 34, 37, 40) */}
+        <div className="relative">
+          <button
+            id="tools-toggle-btn"
+            onClick={() => setShowToolsMenu(!showToolsMenu)}
+            className="px-2.5 py-1.5 rounded-xl text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/10 flex items-center gap-1.5 transition-colors cursor-pointer border border-white/5"
+            title="Outils interactifs & multimédias"
+          >
+            <Sliders className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="hidden md:inline">Outils Pro</span>
+            <ChevronDown className="w-3 h-3 text-zinc-500" />
+          </button>
+
+          {showToolsMenu && (
+            <div
+              id="tools-dropdown-menu"
+              className="absolute right-0 mt-2 w-56 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-2 z-50 space-y-1 animate-in fade-in zoom-in-95 duration-100"
+            >
+              <div className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider px-2 py-1">
+                Expérience & Rendu
+              </div>
+
+              {onOpenFlipPhysics && (
+                <button
+                  onClick={() => {
+                    onOpenFlipPhysics();
+                    setShowToolsMenu(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-xl text-left text-xs flex items-center gap-2.5 text-zinc-300 hover:bg-zinc-800 hover:text-white cursor-pointer"
+                >
+                  <Sliders className="w-4 h-4 text-emerald-400" />
+                  <div>
+                    <div className="font-medium">Physique de Page</div>
+                    <div className="text-[10px] text-zinc-500">Moteur réaliste, rigide ou fluide</div>
+                  </div>
+                </button>
+              )}
+
+              {onOpenPrintSelection && (
+                <button
+                  onClick={() => {
+                    onOpenPrintSelection();
+                    setShowToolsMenu(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-xl text-left text-xs flex items-center gap-2.5 text-zinc-300 hover:bg-zinc-800 hover:text-white cursor-pointer"
+                >
+                  <Printer className="w-4 h-4 text-blue-400" />
+                  <div>
+                    <div className="font-medium">Impression Sélective</div>
+                    <div className="text-[10px] text-zinc-500">Imprimer par page, planche ou livret</div>
+                  </div>
+                </button>
+              )}
+
+              {onOpen3DViewer && (
+                <button
+                  onClick={() => {
+                    onOpen3DViewer();
+                    setShowToolsMenu(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-xl text-left text-xs flex items-center gap-2.5 text-zinc-300 hover:bg-zinc-800 hover:text-white cursor-pointer"
+                >
+                  <Box className="w-4 h-4 text-indigo-400" />
+                  <div>
+                    <div className="font-medium">Inspecteur 3D / AR</div>
+                    <div className="text-[10px] text-zinc-500">Modèle 3D interactif et réalité augmentée</div>
+                  </div>
+                </button>
+              )}
+
+              {onOpenInPageForm && (
+                <button
+                  onClick={() => {
+                    onOpenInPageForm();
+                    setShowToolsMenu(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-xl text-left text-xs flex items-center gap-2.5 text-zinc-300 hover:bg-zinc-800 hover:text-white cursor-pointer"
+                >
+                  <FileText className="w-4 h-4 text-amber-400" />
+                  <div>
+                    <div className="font-medium">Formulaire Interactif</div>
+                    <div className="text-[10px] text-zinc-500">Saisie et devis intégrés à la page</div>
+                  </div>
+                </button>
+              )}
+
+              {onToggleChromaAvatar && (
+                <button
+                  onClick={() => {
+                    onToggleChromaAvatar();
+                    setShowToolsMenu(false);
+                  }}
+                  className={`w-full px-2.5 py-1.5 rounded-xl text-left text-xs flex items-center gap-2.5 cursor-pointer ${
+                    isChromaAvatarActive ? 'bg-rose-500/20 text-rose-300' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
+                  }`}
+                >
+                  <Video className="w-4 h-4 text-rose-400" />
+                  <div>
+                    <div className="font-medium">Hôte Vidéo Virtuel</div>
+                    <div className="text-[10px] text-zinc-500">{isChromaAvatarActive ? 'Désactiver l\'avatar' : 'Avatar transparent incrusté'}</div>
+                  </div>
+                </button>
+              )}
+
+              {onToggleDeveloperMode && (
+                <button
+                  id="toggle-dev-mode-btn"
+                  onClick={() => {
+                    onToggleDeveloperMode();
+                    setShowToolsMenu(false);
+                  }}
+                  className={`w-full px-2.5 py-1.5 rounded-xl text-left text-xs flex items-center gap-2.5 cursor-pointer ${
+                    isDeveloperMode ? 'bg-emerald-500/20 text-emerald-300' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
+                  }`}
+                >
+                  <Activity className="w-4 h-4 text-emerald-400" />
+                  <div>
+                    <div className="font-medium">Mode Développeur</div>
+                    <div className="text-[10px] text-zinc-500">{isDeveloperMode ? 'Actif (Indicateur FPS & 3D)' : 'Afficher l\'indicateur FPS'}</div>
+                  </div>
+                </button>
+              )}
             </div>
           )}
         </div>
