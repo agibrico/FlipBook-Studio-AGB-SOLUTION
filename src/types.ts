@@ -45,6 +45,8 @@ export type ViewLayout = 'auto' | 'single' | 'double';
 
 export type ReaderTheme = 'studio-dark' | 'wood-desk' | 'paper-light' | 'sepia-warm';
 
+export type UiTheme = 'dark' | 'light';
+
 export type DeviceMode = 'responsive' | 'mobile' | 'tablet' | 'desktop';
 
 // Re-export SaaS Multi-Tenant Architecture & Data Models

@@ -4,21 +4,26 @@ import { InPageFormConfig, InPageFormSubmission } from '../types/saas';
 import { formBuilderService } from '../services/formBuilderService';
 
 interface InPageFormModalProps {
-  form: InPageFormConfig;
+  form?: InPageFormConfig;
+  formConfig?: InPageFormConfig;
   isOpen: boolean;
   onClose: () => void;
   onSubmitted?: (submission: InPageFormSubmission) => void;
 }
 
 export const InPageFormModal: React.FC<InPageFormModalProps> = ({
-  form,
+  form: propForm,
+  formConfig,
   isOpen,
   onClose,
   onSubmitted,
 }) => {
+  const form = propForm || formConfig;
+  const fields = form?.fields || [];
+
   const [formValues, setFormValues] = useState<Record<string, any>>(() => {
     const init: Record<string, any> = {};
-    form.fields.forEach((f) => {
+    fields.forEach((f) => {
       init[f.id] = f.defaultValue !== undefined ? f.defaultValue : '';
     });
     return init;
@@ -28,7 +33,17 @@ export const InPageFormModal: React.FC<InPageFormModalProps> = ({
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  if (!isOpen) return null;
+  React.useEffect(() => {
+    if (fields.length > 0) {
+      const init: Record<string, any> = {};
+      fields.forEach((f) => {
+        init[f.id] = f.defaultValue !== undefined ? f.defaultValue : '';
+      });
+      setFormValues(init);
+    }
+  }, [form?.id, isOpen]);
+
+  if (!isOpen || !form) return null;
 
   // Calcul dynamique du devis estimé si activé
   const nights = Number(formValues.nights || 3);
@@ -39,7 +54,7 @@ export const InPageFormModal: React.FC<InPageFormModalProps> = ({
     setErrorMsg('');
 
     // Validation champs requis
-    for (const field of form.fields) {
+    for (const field of fields) {
       if (field.required && !formValues[field.id]) {
         setErrorMsg(`Le champ "${field.label}" est obligatoire.`);
         return;
@@ -106,7 +121,11 @@ export const InPageFormModal: React.FC<InPageFormModalProps> = ({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
-            {form.subtitle && <p className="text-xs text-zinc-400 leading-relaxed">{form.subtitle}</p>}
+            {(form.subtitle || (form as any).description) && (
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                {form.subtitle || (form as any).description}
+              </p>
+            )}
 
             {errorMsg && (
               <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center gap-2">
@@ -116,61 +135,65 @@ export const InPageFormModal: React.FC<InPageFormModalProps> = ({
             )}
 
             {/* Champs du formulaire */}
-            {form.fields.map((field) => (
-              <div key={field.id} className="space-y-1.5">
-                <label className="block text-xs font-medium text-zinc-300">
-                  {field.label} {field.required && <span className="text-amber-400">*</span>}
-                </label>
+            {fields.map((field) => {
+              const fieldType = String(field.type || '').toUpperCase();
+              return (
+                <div key={field.id} className="space-y-1.5">
+                  <label className="block text-xs font-medium text-zinc-300">
+                    {field.label} {field.required && <span className="text-amber-400">*</span>}
+                  </label>
 
-                {field.type === 'TEXT' || field.type === 'EMAIL' || field.type === 'PHONE' ? (
-                  <input
-                    type={field.type.toLowerCase()}
-                    placeholder={field.placeholder}
-                    value={formValues[field.id] || ''}
-                    onChange={(e) => setFormValues({ ...formValues, [field.id]: e.target.value })}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-zinc-200 text-sm focus:outline-none focus:border-amber-500 transition"
-                  />
-                ) : field.type === 'SELECT' ? (
-                  <select
-                    value={formValues[field.id] || ''}
-                    onChange={(e) => setFormValues({ ...formValues, [field.id]: e.target.value })}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-zinc-200 text-sm focus:outline-none focus:border-amber-500 transition"
-                  >
-                    {field.options?.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                ) : field.type === 'RANGE_SLIDER' ? (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs text-zinc-400">
-                      <span>1 {field.unit}</span>
-                      <span className="font-bold text-amber-400 text-sm">
-                        {formValues[field.id]} {field.unit}
-                      </span>
-                      <span>14 {field.unit}</span>
-                    </div>
+                  {fieldType === 'TEXT' || fieldType === 'EMAIL' || fieldType === 'PHONE' || fieldType === 'TEL' || fieldType === 'NUMBER' ? (
                     <input
-                      type="range"
-                      min={1}
-                      max={14}
-                      value={formValues[field.id] || 3}
-                      onChange={(e) => setFormValues({ ...formValues, [field.id]: Number(e.target.value) })}
-                      className="w-full accent-amber-500 cursor-pointer"
+                      type={fieldType === 'PHONE' || fieldType === 'TEL' ? 'tel' : fieldType === 'NUMBER' ? 'number' : fieldType === 'EMAIL' ? 'email' : 'text'}
+                      placeholder={field.placeholder}
+                      value={formValues[field.id] || ''}
+                      onChange={(e) => setFormValues({ ...formValues, [field.id]: e.target.value })}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-zinc-200 text-sm focus:outline-none focus:border-amber-500 transition"
                     />
-                  </div>
-                ) : field.type === 'TEXTAREA' ? (
-                  <textarea
-                    rows={3}
-                    placeholder={field.placeholder}
-                    value={formValues[field.id] || ''}
-                    onChange={(e) => setFormValues({ ...formValues, [field.id]: e.target.value })}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-200 text-sm focus:outline-none focus:border-amber-500 transition"
-                  />
-                ) : null}
-              </div>
-            ))}
+                  ) : fieldType === 'SELECT' ? (
+                    <select
+                      value={formValues[field.id] || ''}
+                      onChange={(e) => setFormValues({ ...formValues, [field.id]: e.target.value })}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-zinc-200 text-sm focus:outline-none focus:border-amber-500 transition"
+                    >
+                      <option value="">Sélectionnez une option...</option>
+                      {field.options?.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  ) : fieldType === 'RANGE_SLIDER' ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs text-zinc-400">
+                        <span>1 {field.unit}</span>
+                        <span className="font-bold text-amber-400 text-sm">
+                          {formValues[field.id]} {field.unit}
+                        </span>
+                        <span>14 {field.unit}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={1}
+                        max={14}
+                        value={formValues[field.id] || 3}
+                        onChange={(e) => setFormValues({ ...formValues, [field.id]: Number(e.target.value) })}
+                        className="w-full accent-amber-500 cursor-pointer"
+                      />
+                    </div>
+                  ) : fieldType === 'TEXTAREA' ? (
+                    <textarea
+                      rows={3}
+                      placeholder={field.placeholder}
+                      value={formValues[field.id] || ''}
+                      onChange={(e) => setFormValues({ ...formValues, [field.id]: e.target.value })}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-200 text-sm focus:outline-none focus:border-amber-500 transition"
+                    />
+                  ) : null}
+                </div>
+              );
+            })}
 
             {/* Calculatrice de devis en direct */}
             {estimatedTotal && (
